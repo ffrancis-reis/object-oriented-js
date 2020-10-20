@@ -91,56 +91,40 @@ Dinos.forEach(function (dino) {
   dinosaurs.push(new Dinosaur(dino));
 });
 
+function randomizeArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * i);
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
 // Create Human Object
-const human = {
-  species: "human",
-  where: "North America",
-  when: "Late Cretaceous",
-  fact: "First discovered in 1889 by Othniel Charles Marsh",
-};
+const human = {};
 
 // Use IIFE to get human data from form
-const button = document.getElementById("btn");
+const getHumanData = (function () {
+  const nameElement = document.getElementById("name");
+  const feetElement = document.getElementById("feet");
+  const inchesElement = document.getElementById("inches");
+  const weightElement = document.getElementById("weight");
+  const dietElement = document.getElementById("diet");
 
-button.addEventListener("click", () => {
-  (function (human) {
-    const nameElement = document.getElementById("name");
-    const feetElement = document.getElementById("feet");
-    const inchesElement = document.getElementById("inches");
-    const weightElement = document.getElementById("weight");
-    const dietElement = document.getElementById("diet");
-
-    return function () {
-      human.name = nameElement.value;
-      human.feet = feetElement.value;
-      human.inches = inchesElement.value;
-      human.weight = weightElement.value;
-      human.diet = dietElement.value;
-    };
-  })();
-});
-
-// human.name = getHumanData().name;
-// human.feet = getHumanData().feet;
-// human.inches = getHumanData().inches;
-// human.weight = getHumanData().weight;
-// human.diet = getHumanData().diet;
+  return async function (human) {
+    human.name = nameElement.value;
+    human.height = Number(feetElement.value) * 12 + Number(inchesElement.value);
+    human.weight = Number(weightElement.value);
+    human.diet = dietElement.value;
+  };
+})();
 
 // Create Dino Compare Method 1
 // NOTE: Weight in JSON file is in lbs, height in inches.
 function compareMeasurements(human, dinosaur) {
-  const weight =
-    human.weight > dinosaur.weight
-      ? "You are heavier than this dinosaur!"
-      : "You are lighter than this dinosaur!";
-  const height =
-    human.inches > dinosaur.height
-      ? "You are taller than this dinosaur!"
-      : "You are smaller than this dinosaur!";
+  const height = human.height > dinosaur.height ? "taller" : "shorter";
+  const weight = human.weight > dinosaur.weight ? "heavier" : "lighter";
+  const measure = `You are ${height} and ${weight} than this dinosaur!`;
 
-  return {
-    measuresComparison: `${weight} ${height}`,
-  };
+  return measure;
 }
 
 // Create Dino Compare Method 2
@@ -148,65 +132,80 @@ function compareMeasurements(human, dinosaur) {
 function compareDiet(human, dinosaur) {
   const diet = `You are a ${human.diet} man while this dino is a ${dinosaur.diet} creature!`;
 
-  return {
-    dietComparison: diet,
-  };
+  return diet;
 }
 
 // Create Dino Compare Method 3
 // NOTE: Weight in JSON file is in lbs, height in inches.
 function compareSpecies(dinosaur) {
-  const species = `You are a complex human being man while this dino is a ${dinosaur.species} species!`;
+  const species = `You are a complex human being while this dino is a ${dinosaur.species} species!`;
 
-  return {
-    speciesComparison: species,
-  };
+  return species;
+}
+
+const facts = [];
+
+function buildRandomFacts() {
+  return dinosaurs.map((dino) => {
+    let fact = [
+      dino.fact,
+      compareMeasurements(human, dino),
+      compareDiet(human, dino),
+      compareSpecies(dino),
+    ];
+
+    return fact;
+  });
 }
 
 // Generate Tiles for each Dino in Array
-function generateTiles() {
-  const tiles = [];
-
-  let generateTile = function (data) {
-    const item = document.createElement("div");
-    item.classList.add("grid-item");
+function generateTiles(tiles) {
+  dinosaurs.forEach((dino, index) => {
+    const dinoTile = document.createElement("div");
+    dinoTile.classList.add("grid-item");
 
     const header = document.createElement("h3");
-    header.textContent = data.name || data.species;
+    header.textContent = dino.species;
 
     const image = document.createElement("img");
-    const imageFile = data.species.toLowerCase();
-    image.src = `images/${imageFile}.png`;
+    image.src = `images/${dino.species.toLowerCase()}.png`;
 
     const text = document.createElement("p");
-    text.textContent = data.fact;
+    text.textContent =
+      dino.species == "pigeon"
+        ? "All birds are living dinosaurs."
+        : facts[index][Math.floor(Math.random() * 3)];
 
-    return { item, header, image, text };
-  };
-
-  dinosaurs.forEach((dino) => {
-    let dinoTile = generateTile(dino);
+    dinoTile.appendChild(header);
+    dinoTile.appendChild(image);
+    dinoTile.appendChild(text);
 
     tiles.push(dinoTile);
   });
 
-  const humanTile = generateTile(human);
+  const humanTile = document.createElement("div");
+  humanTile.classList.add("grid-item");
 
-  tiles.push(humanTile);
+  const header = document.createElement("h3");
+  header.textContent = human.name;
 
-  return tiles;
+  const image = document.createElement("img");
+  image.src = `images/human.png`;
+
+  humanTile.appendChild(header);
+  humanTile.appendChild(image);
+
+  randomizeArray(tiles);
+
+  tiles.splice(4, 0, humanTile);
 }
 
 // Add tiles to DOM
-function addTilesToGrid(dinos) {
+function addTilesToGrid(tiles) {
   const grid = document.getElementById("grid");
 
-  dinos.forEach((dino) => {
-    dino.item.appendChild(dino.header);
-    dino.item.appendChild(dino.image);
-    dino.item.appendChild(dino.text);
-
-    grid.appendChild(dino.item);
+  tiles.forEach((tile) => {
+    grid.appendChild(tile);
   });
 }
 
@@ -216,14 +215,27 @@ function removeForm() {
   form.innerHTML = "";
 }
 
-// On button click, prepare and display infographic
-button.addEventListener("click", () => {
-  console.log(compareMeasurements(human, dinosaurs[0]));
-  console.log(compareDiet(human, dinosaurs[0]));
-  console.log(compareSpecies(dinosaurs[0]));
+function addReloadButton() {
+  const buttonElement = document.createElement("button");
+  buttonElement.innerText = "Try again!";
+  buttonElement.style.cssText =
+    "display: inline-block; background: #ccc; padding: 0.8em; margin: 1.2em auto; transition: ease 0.3s all;;";
+  buttonElement.addEventListener("click", () => document.location.reload());
 
-  const tiles = generateTiles();
+  document.body.appendChild(buttonElement);
+}
+
+// On button click, prepare and display infographic
+const button = document.getElementById("btn");
+button.addEventListener("click", () => {
+  getHumanData(human);
+  facts.push(...buildRandomFacts());
+
+  const tiles = [];
+  generateTiles(tiles);
   addTilesToGrid(tiles);
 
   removeForm();
+
+  addReloadButton();
 });
