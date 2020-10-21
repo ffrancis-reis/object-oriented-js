@@ -107,19 +107,23 @@ const getHumanData = (function () {
   const feetElement = document.getElementById("feet");
   const inchesElement = document.getElementById("inches");
   const weightElement = document.getElementById("weight");
+  const birthdateElement = document.getElementById("birthdate");
+  const locationElement = document.getElementById("location");
   const dietElement = document.getElementById("diet");
 
   return async function (human) {
     human.name = nameElement.value;
     human.height = Number(feetElement.value) * 12 + Number(inchesElement.value);
     human.weight = Number(weightElement.value);
+    human.birthdate = birthdateElement.value;
+    human.location = locationElement.value;
     human.diet = dietElement.value;
   };
 })();
 
 // Create Dino Compare Method 1
 // NOTE: Weight in JSON file is in lbs, height in inches.
-function compareMeasurements(human, dinosaur) {
+function compareMeasures(human, dinosaur) {
   const height = human.height > dinosaur.height ? "taller" : "shorter";
   const weight = human.weight > dinosaur.weight ? "heavier" : "lighter";
   const measure = `You are ${height} and ${weight} than this dinosaur!`;
@@ -137,10 +141,16 @@ function compareDiet(human, dinosaur) {
 
 // Create Dino Compare Method 3
 // NOTE: Weight in JSON file is in lbs, height in inches.
-function compareSpecies(dinosaur) {
-  const species = `You are a complex human being while this dino is a ${dinosaur.species} species!`;
+function compareHabitat(human, dinosaur) {
+  const species = `You are a complex human being from ${human.location} while this dino is a ${dinosaur.species} from ${dinosaur.where}!`;
 
   return species;
+}
+
+function compareBirth(human, dinosaur) {
+  const birth = `You've born in ${human.birthdate} while this dino is from a ${dinosaur.when} period of time!`;
+
+  return birth;
 }
 
 const facts = [];
@@ -149,9 +159,10 @@ function buildRandomFacts() {
   return dinosaurs.map((dino) => {
     let fact = [
       dino.fact,
-      compareMeasurements(human, dino),
+      compareMeasures(human, dino),
       compareDiet(human, dino),
-      compareSpecies(dino),
+      compareHabitat(human, dino),
+      compareBirth(human, dino),
     ];
 
     return fact;
